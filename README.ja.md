@@ -94,6 +94,10 @@ Counter-Strike 2 のデモファイル向け Kivy ビューアーです。バン
 kdv\kdv.exe
 ```
 
+重要:
+- `kdv.exe` の実行には、実行ファイルと同じディレクトリに `img/`、`maps/`、`kdv_config.json` が必要です。
+- ビルド成果物を移動・配布する場合も、これらを `kdv.exe` と同じ階層に配置してください。
+
 ## 設定 (`kdv/kdv_config.json`)
 - `kdv/kdv_config.json` を編集して、UI 初期値やマップ補正値を変更できます。
 - 変更はアプリ起動時に反映されます（編集後は KDV を再起動）。

@@ -94,6 +94,10 @@ After setup, launch:
 kdv\kdv.exe
 ```
 
+Important:
+- `kdv.exe` requires `img/`, `maps/`, and `kdv_config.json` in the same directory as the executable.
+- When moving or distributing the build, keep these files/folders next to `kdv.exe`.
+
 ## Configuration (`kdv/kdv_config.json`)
 - You can edit `kdv/kdv_config.json` to change UI initial values and map calibration.
 - Changes are applied when the app starts (restart KDV after editing).
