@@ -1,0 +1,813 @@
+#:set RP_BG_UP (0.3, 0.3, 0.3, 0.3)
+#:set RP_BG_DOWN (0.8, 0.8, 0.8, 0.5)
+#:import dp kivy.metrics.dp
+#:import sp kivy.metrics.sp
+#:import constants kdv_app.constants
+
+<MyLabel>:
+
+<LabelJ@Label>:
+    font_name: './img/ipag.ttf'
+
+<NameLabel@LabelJ>:
+    pos: (self.parent.x - self.width + dp(10), self.parent.y - self.height) if self.parent else (0, 0)
+    font_size: sp(20)
+    size_hint: None, None
+    size: self.texture_size
+    #bold: True
+    outline_width: dp(1)
+    opacity: .7
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0,.3
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+
+<ResultPanel>:
+    orientation: 'vertical'
+    padding: dp(3)
+    spacing: dp(3)
+    canvas.before:
+        Color:
+            rgba: .5,.5,.5,1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        LabelJ:
+            text: root.team_name[:10]
+            text_size: self.size
+            halign: 'center'
+            outline_width: dp(1)
+            font_size: sp(20)
+            canvas.before:
+                Color:
+                    rgba:0,0,0, 1
+        Label:
+            text: str(root.score)
+            text_size: self.size
+            halign: 'center'
+            outline_width: dp(1)
+            font_size: sp(20)
+            size_hint_x: .4
+
+    Label:
+        text: ""
+
+<RoundTeamStat>:
+    money: 0
+    eqvalue: 0
+    ars: 0, 0, 0
+    ratio_money: 0
+    ratio_eqvalue: 0
+    align_right: False
+    orientation: 'vertical'
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1 
+            Line:
+                points: self.x,self.y, self.right,self.y
+            Color:
+                rgba: 1, 0, 1, .25
+            Rectangle:
+                pos: (self.x + (self.width - self.width*root.ratio_money), self.y) if root.align_right else self.pos
+                size: self.width*root.ratio_money, self.height
+        Label:
+            text: "Money"
+            outline_width: dp(1)
+            font_size: sp(13)
+        Label:
+            text: str(root.money)
+            outline_width: dp(1)
+            font_size: sp(13)
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1 
+            Line:
+                points: self.x,self.y, self.right,self.y
+            Color:
+                rgba: 0, 1, 1, .25
+            Rectangle:
+                pos: (self.x + (self.width - self.width*root.ratio_eqvalue), self.y) if root.align_right else self.pos
+                size: self.width*root.ratio_eqvalue, self.height
+        Label:
+            text: "EqValue"
+            outline_width: dp(1)
+            font_size: sp(13)
+        Label:
+            text: str(root.eqvalue)
+            outline_width: dp(1)
+            font_size: sp(13)
+    BoxLayout:
+        Label:
+            text: "A:{0}  R:{1}  S:{2}".format(*root.ars)
+            outline_width: dp(1)
+            font_size: sp(13)
+
+<SimpleRoundButton>:
+    size_hint: None, None
+    size: dp(25), dp(25)
+    on_press: app.root.loader.load_round(self.round_index)
+
+<RoundPanel>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: dp(80)
+    padding: dp(0)
+    on_press: app.root.loader.load_round(root.index)
+    #background_color: 0.3,.3,.3,.3    
+    canvas.before:
+        Color:
+            #rgba: self.background_color
+            rgba: RP_BG_DOWN if root.state == 'down' else RP_BG_UP
+
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        size_hint_y: 0.25
+        Label:
+            text: 'Round: ' + str(root.round_number)
+            font_size: max(sp(12), self.parent.height * 0.6)
+            outline_width: dp(1)
+        Label:
+            text: '{0} - {1}'.format(root.team0_score, root.team1_score)
+            font_size: max(sp(12), self.parent.height * 0.6)
+            outline_width: dp(1)
+        Label:
+            text: 'PlantedSite: ' + root.planted_site
+            font_size: max(sp(12), self.parent.height * 0.6)
+            outline_width: dp(1)
+    BoxLayout:
+        BoxLayout:
+            canvas.before:
+                Color:
+                    rgba: root.team0_color
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            RoundTeamStat:
+                money: root.team0_money
+                eqvalue: root.team0_eqvalue
+                ars: root.team0_ars
+                ratio_money: root.calc_value_ratio(root.team0_money)
+                ratio_eqvalue: root.calc_value_ratio(root.team0_eqvalue)
+                align_right: True
+            Label:
+                size_hint_x: None
+                width: dp(30)
+                font_size: sp(10)
+                outline_width: dp(1)
+                text: root.team0_win_r
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1 
+                    Line:
+                        points: self.x,self.y, self.x,self.top             
+        BoxLayout:
+            orientation:'vertical'
+            size_hint_x: None
+            width: self.parent.height
+            canvas.before:
+                Color:
+                    rgba: root.winteam_color
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                Color:
+                    rgba: (1, 1, 1, root.traj_overlay_alpha) if root.traj_image_path else (1, 1, 1, 0)
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                    source: root.traj_image_path
+        BoxLayout:
+            canvas.before:
+                Color:
+                    rgba: root.team1_color
+                Rectangle:
+                    pos: self.x, self.y
+                    size: self.size
+            Label:
+                size_hint_x: None
+                width: dp(30)
+                font_size: sp(10)
+                outline_width: dp(1)
+                text: root.team1_win_r
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1 
+                    Line:
+                        points: self.right,self.y, self.right,self.top
+            RoundTeamStat:
+                money: root.team1_money
+                eqvalue: root.team1_eqvalue
+                ars: root.team1_ars
+                ratio_money: root.calc_value_ratio(root.team1_money)
+                ratio_eqvalue: root.calc_value_ratio(root.team1_eqvalue)
+
+<NadeLabel>:
+    outline_width: dp(.5)
+    font_size: sp(10)
+    size_hint: None, None
+    size: self.texture_size
+    text: ""
+
+<PlayerPanel>:
+    main_wep: main_wep
+    sub_wep: sub_wep
+
+    he_label: he_label
+    fb_label: fb_label
+    sm_label: sm_label
+    fire_label: fire_label
+    dc_label: dc_label
+
+    orientation: 'vertical'
+    height: dp(70)
+    canvas.before:
+        Color:
+            rgba:0, 0, 0, .3
+        Rectangle:
+            pos: self.pos
+            size: self.width, self.height
+    BoxLayout:
+        padding: dp(2)
+        canvas.before:
+            Color:
+                rgb: root.color[:3]
+                a: .9
+            Rectangle:
+                pos: self.pos
+                size: self.width*(root.hp/100), self.height
+
+        Label:
+            text: str(root.hp)
+            font_size: sp(14)
+            outline_width: dp(1)
+            size_hint_x: .1
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+        Label:
+            text: "{} |".format(str(root.slot))
+            font_size: sp(14)
+            outline_width: dp(1)
+            size_hint_x: .1
+            text_size: self.size
+            halign: 'right'
+            valign: 'middle'
+        LabelJ:
+            text: " {}".format(root.name)
+            size_hint_y: None
+            text_size: self.width, None
+            height: self.texture_size[1]
+            font_size: sp(15)
+            outline_width: dp(1)
+            size_hint_x: .5
+            halign: 'left'
+            valign: 'middle'
+
+        Label:
+            # Main Weapon
+            id: main_wep
+            text: "-"
+            outline_width: dp(1)
+            text_size: self.size
+            size_hint_x: .25
+            halign: 'right'
+            valign: 'middle'
+
+    BoxLayout:
+        padding: dp(2)
+        Label:
+            text: root.armor + root.helmet
+            outline_width: dp(.5)
+            text_size: self.size
+            valign: 'middle'
+            size_hint_x: .2
+            font_size: sp(12)
+        Label:
+            text: root.c4 + root.defkit 
+            outline_width: dp(.5)
+            text_size: self.size
+            valign: 'middle'
+            size_hint_x: .2
+            font_size: sp(12)
+        StackLayout:
+            orientation: 'rl-tb'
+            spacing: dp(1)
+            NadeLabel:
+                id: he_label
+            NadeLabel:
+                id: fb_label
+            NadeLabel:
+                id: sm_label
+            NadeLabel:
+                id: fire_label
+            NadeLabel:
+                id: dc_label
+        Label:
+            id: sub_wep
+            text: "-"
+            outline_width: dp(.5)
+            text_size: self.size
+            font_size: sp(13)
+            halign: 'right'
+            valign: 'middle'
+            opacity: .6
+            size_hint_x: None
+            width: dp(80)
+<TeamPanel>:
+    id: team
+    players_box: players_box
+    orientation: 'vertical'
+    padding: dp(3)
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(7)
+        spacing: dp(7)
+        canvas.before:
+            Color:
+                rgba: root.team_color
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+        BoxLayout:
+            size_hint_y: None
+            height: dp(20)
+            LabelJ:
+                text: root.team_name[:10]
+                text_size: self.size
+                size: self.texture_size
+                halign: 'center'
+                outline_width: dp(1)
+                font_size: sp(18)
+                canvas.before:
+                    Color:
+                        rgba:0,0,0, 1
+                    #Line:
+                    #    points: self.right, self.y, self.right, self.top
+                    #    width: 1.5
+            Label:
+                text: str(root.score)
+                text_size: self.size
+                halign: 'center'
+                outline_width: dp(1)
+                font_size: sp(20)
+                size_hint_x: .2
+            Label:
+                text: "{}".format("Win" if root.is_winner else "")
+                text_size: self.size
+                halign: 'center'
+                outline_width: dp(1)
+                font_size: sp(20)
+                size_hint_x: .3
+        BoxLayout:
+            size_hint_y: None
+            height: dp(30)
+            canvas.before:
+                Color:
+                    rgba:0,0,0,.5
+                Line:
+                    points: self.x,self.y,self.x+self.width,self.y
+                    width: dp(1.5)
+            Label:
+                text: "[size=11]Money[/size] " + str(root.rsmoney)
+                size_hint_y: None
+                height: dp(20)
+                outline_width: dp(1)
+                font_size: sp(14)
+                markup: True
+            Label:
+                text: "[size=11]EqValue[/size] " + str(root.rseqvalue)
+                size_hint_y: None
+                height: dp(20)
+                outline_width: dp(1)
+                font_size: sp(14)
+                markup: True
+            Label:
+                text: "A:{0} R:{1} S:{2}".format(*root.ars)
+                size_hint_y: None
+                height: dp(20)
+                outline_width: dp(1)
+                font_size: sp(14)
+                markup: True
+        BoxLayout:
+            id: players_box
+            orientation: 'vertical'
+<TeamsPanel>:
+    BoxLayout:
+        size_hint_y: None
+        height: dp(20)
+        Label:
+            text: "Round {}".format(root.round_number)
+        Label:
+            text: "WinTeam:{0} ({1})".format(root.win_team, root.win_reason)
+            font_size: sp(12)
+        Label:
+            text: "PlantedSite {}".format(root.planted_site)
+            font_size: sp(12)
+    TeamPanel:
+        id: team0
+        size_hint_y: .45
+
+    TeamPanel:
+        id: team1
+        size_hint_y: .45
+
+<NadeInfoPanel>:
+    size_hint_y: None
+    height: dp(40)
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: root.time
+            outline_width: dp(1)
+            font_size: sp(13)
+        Label:
+            text: root.tick
+            outline_width: dp(1)
+            font_size: sp(13)
+    LabelJ:
+        text: root.thrower
+        size_hint_x: .5
+        outline_width: dp(1)
+        font_size: sp(13)
+    Label:
+        text: root.n_type
+        outline_width: dp(1)
+        font_size: sp(13)
+
+<Player>:
+    NameLabel:
+        id: namelabel
+    Label:
+        id: numlabel
+        center: root.center
+        outline_width: dp(1)
+        opacity: 1
+    Label:
+        id: acwlabel
+        size_hint: None, None
+        size: self.texture_size
+        center_x: root.center_x
+        y: root.top
+        outline_width: dp(1)
+        opacity: 1
+        text: '-'
+
+<Grenade>:
+    size: self.parent.size if self.parent else (0, 0)
+<KdvMap>:
+    do_rotation: False
+    do_scale: True
+    do_translation: False, False
+    auto_bring_to_front: False
+    scale_max: 1.5
+    scale_min: .5
+    size: 1024, 1024
+
+<ClearButton@Button>:
+<MapBoard>:
+
+<CheckRow@BoxLayout>:
+    label_text: ""
+    checkbox_active: False
+    checkbox: checkbox
+    size_hint: 1, None
+    height: dp(40)
+    canvas.before:
+        Color:
+            rgba: .5, .5, .5, .5
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    Label:
+        text: root.label_text
+        font_size: sp(11)
+    CheckBox:
+        id: checkbox
+        active: root.checkbox_active
+
+<EventLog>:
+    font_size: sp(16)
+    size_hint: None, None
+    size: self.texture_size
+    text_size: self.width, None
+    outline_width: dp(1)
+    halign: 'left'
+    valign: 'middle'
+    markup: True
+    font_name: './img/ipag.ttf'
+<EventLogger>:
+    cols: 1
+
+<HintBox>:
+    width: dp(1.5)
+    size_hint: None,None
+    canvas.after:
+        Color:
+            rgba: self.color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+        #Line:
+        #    points: self.x, self.y, self.x, self.top
+        #    width: 1.2
+    Label:
+        id: label
+        text: root.hint_text
+        font_size: sp(11)
+        x: root.x - self.texture_size[0]/2
+        y: root.top
+        size: self.texture_size
+        outline_width: dp(1)
+        markup: True
+
+<Seekbar>:
+    step: 1
+    padding: dp(0)
+    cursor_size: 0,0
+    hint_layer: hint_layer
+    canvas.after:
+        Color:
+            rgba: .5,.5,.5,.5
+        Rectangle:
+            pos: self.pos
+            size: self.width*self.value_normalized, self.height
+    RelativeLayout:
+        id: hint_layer
+        size: root.size
+        pos: root.pos
+
+
+<Kdv>:
+    tab: tab
+    round_list_panel: round_list_panel
+    teams_panel: teams_panel
+    nade_list_panel: nade_list_panel
+
+    kdvmap: kdvmap
+    map_layer_sp: map_layer_sp
+    map_traj_toggle: map_traj_toggle
+
+    event_logger: event_logger
+    seekbar: seekbar
+    speed_sp: speed_sp
+    simple_round_list: simple_round_list
+
+    paint: paint
+    color_sp: color_sp
+
+    chk_wico: wico_row.checkbox
+    chk_name: name_row.checkbox
+    chk_num: num_row.checkbox
+    chk_hp: hp_row.checkbox
+    chk_sl: sl_row.checkbox
+    chk_pu: pu_row.checkbox
+
+    KdvMap:
+        id: kdvmap
+        #center_x: map_board.center_x - 60 + self.xgap
+        center_x: map_board.center_x + self.xgap - dp(60)
+        center_y: map_board.center_y + self.ygap
+    Paint:
+        id: paint
+        pos: map_board.pos
+        size: map_board.size
+
+    EventLogger:
+        id: event_logger
+        size: dp(320), dp(150)
+        right: root.right
+        top: root.top
+
+    BoxLayout:
+        orientation: 'horizontal'
+        pos: root.pos
+        size: root.size
+        TabbedPanel:
+            id: tab
+            opacity: .9
+            size_hint: None, 1
+            width: dp(320)
+            do_default_tab: False
+            tab_width: dp(80)
+            TabbedPanelItem:
+                text: "Match"
+                GridLayout:
+                    cols: 1
+                    padding: dp(5)
+                    spacing: dp(5)
+                    ResultPanel:
+                        id: result0
+                        size_hint_y: None
+                        height: dp(50)
+                    ResultPanel:
+                        id: result1
+                        size_hint_y: None
+                        height: dp(50)
+                    Label:
+                        text: root.ver
+                        size_hint_y: None
+                        height: dp(20)
+            TabbedPanelItem:
+                text: "Round"
+                BoxLayout:
+                    orientation: 'vertical'
+                    BoxLayout:
+                        padding: dp(5)
+                        spacing: dp(3)
+                        size_hint_y: None
+                        height: dp(30)
+                        LabelJ:
+                            text: root.team0_name[:10]
+                            outline_width: dp(1.5)
+                        LabelJ:
+                            text: root.team1_name[:10]
+                            outline_width: dp(1.5)
+                    RecycleView:
+                        id: round_list_panel
+                        viewclass: 'RoundPanelRVItem'
+                        do_scroll_x: False
+                        bar_width: dp(5)
+                        scroll_wheel_distance: dp(80)
+                        RecycleBoxLayout:
+                            default_size_hint: 1, None
+                            default_size: None, None
+                            padding: 0
+                            spacing: 10
+                            size_hint_y: None
+                            height: self.minimum_height
+                            orientation: 'vertical'                         
+            TabbedPanelItem:
+                text: "Teams"
+                ScrollView:
+                    do_scroll_x: False
+                    bar_width: dp(5)
+                    scroll_wheel_distance: dp(40)
+                    GridLayout:
+                        cols: 1
+                        size_hint: 1, None
+                        height: self.minimum_height
+                        TeamsPanel:
+                            id: teams_panel
+                            size_hint_y: None
+                            height: dp(680)
+                        CheckRow:
+                            id: wico_row
+                            label_text: 'Weapon Icon'
+                            checkbox_active: constants.CHECKBOX_DEFAULTS["wico"]
+                        CheckRow:
+                            id: num_row
+                            label_text: 'Number Label'
+                            checkbox_active: constants.CHECKBOX_DEFAULTS["num"]
+                        CheckRow:
+                            id: hp_row
+                            label_text: 'HP Bar'
+                            checkbox_active: constants.CHECKBOX_DEFAULTS["hp"]
+                        CheckRow:
+                            id: name_row
+                            label_text: 'Name Label'
+                            checkbox_active: constants.CHECKBOX_DEFAULTS["name"]
+                        CheckRow:
+                            id: sl_row
+                            label_text: 'Sight Line'
+                            checkbox_active: constants.CHECKBOX_DEFAULTS["sl"]
+                        CheckRow:
+                            id: pu_row
+                            label_text: 'Player Utilities'
+                            checkbox_active: constants.CHECKBOX_DEFAULTS["pu"]
+                        Label:
+                            text: ""
+            TabbedPanelItem:
+                text: "Nade"
+                BoxLayout:
+                    orientation: 'vertical'
+                    RecycleView:
+                        id: nade_list_panel
+                        viewclass: 'NadeInfoRVItem'
+                        do_scroll_x: False
+                        bar_width: dp(5)
+                        scroll_wheel_distance: dp(40)
+                        RecycleBoxLayout:
+                            default_size_hint: 1, None
+                            default_size: None, dp(40)
+                            padding: 0
+                            spacing: 3
+                            size_hint_y: None
+                            height: self.minimum_height
+                            orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
+            BoxLayout:
+                orientation: 'horizontal'
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_x: .1
+                    StackLayout:
+                        orientation: 'tb-lr'
+                        spacing: dp(7)
+                        padding: dp(7)
+                        Button:
+                            size_hint: None,None
+                            size: dp(50), dp(20)
+                            text: "Clear"
+                            on_press: root.paint.clear()
+                        Spinner:
+                            id: color_sp
+                            size_hint: None, None
+                            height: dp(50)
+                            width: dp(50)
+                            text: "White"
+                            values: "White", "Orange", "Blue"
+                            text_autoupdate: True
+                            on_text: root.change_paint_color()
+                            on_press: root.stop()   
+                    StackLayout:
+                        orientation: 'bt-lr'
+                        size_hint_y: None
+                        height: dp(300)
+                        spacing: dp(7)
+                        padding: dp(7)
+                        Button:
+                            size_hint: None, None
+                            width: dp(60)
+                            height: dp(40)
+                            font_size: sp(11)
+                            #text: "Go to \n{}".format(root.get_time_from_index(root.bookmark_index))
+                            text: "Copy\ncurrent tick"
+                            halign: 'center'
+                            valign: 'middle'
+                            #on_press: root.now_ss_index = root.bookmark_index
+                            on_press: root.copy_tick()
+                        Spinner:
+                            id: speed_sp
+                            size_hint: None, None
+                            width: dp(60)
+                            height: dp(40)
+                            text: "x1"
+                            values:  "x4","x2","x1", "x1/2" 
+                            on_text: root.change_speed()
+                        Button:
+                            id: map_layer_sp
+                            size_hint: None, None
+                            height: dp(120)
+                            width: dp(60)
+                            text: "Upper"
+                            #values: "Upper", "Lower"
+                            #text_autoupdate: True
+                            on_press: root.change_layer();root.refresh_layer()
+                        ToggleButton:
+                            id: map_traj_toggle
+                            size_hint: None, None
+                            size: dp(60),dp(40)
+                            state: "normal"
+                            text: "Traj ON" if self.state == "down" else "Traj OFF"
+                            on_state: root.show_map_traj = (self.state == "down"); root.refresh_layer()
+                MapBoard:
+                    orientation: 'vertical'
+                    id: map_board
+                    root: root
+                    on_size: root.resize_map(self.size)
+                    #on_touch_down: if self.collide_point(*args[1].pos) and args[1].button == 'left': root.press_play()
+            BoxLayout:
+                size_hint_y: None
+                height: dp(45)
+                BoxLayout:
+                    orientation: 'vertical'
+                    width: dp(80)
+                    size_hint_x: None
+                    on_touch_down: if self.collide_point(*args[1].pos) and args[1].button == 'left': root.copy_tick()
+                    Label:
+                        text: '{}'.format(root.current_time)    
+                    Label:
+                        text: 'Tick:{}'.format(root.current_tick) 
+
+                Button:
+                    size_hint_x: None
+                    width: dp(50)
+                    on_press: root.controller.load_prev_round()
+                    text: "<"
+                Seekbar:
+                    id: seekbar
+                    root: root
+                    value: root.current_ss_index
+                    range: 0, (root.ss_index_max - 1) if root.ss_index_max > 0 else 0
+                    on_value: root.current_ss_index = int(self.value);root.update_ss(int(root.current_ss_index))
+                    #on_touch_down: if self.collide_point(*args[1].pos) is True: root.stop()
+                    #on_touch_up: if self.collide_point(*args[1].pos) is True: root.play()
+                Button:
+                    size_hint_x: None
+                    width: dp(50)
+                    on_press: root.controller.load_next_round()
+                    text: ">"
+            StackLayout:
+                id: simple_round_list
+                orientation: 'lr-tb'
+                size_hint_y: None
+                height: self.minimum_height

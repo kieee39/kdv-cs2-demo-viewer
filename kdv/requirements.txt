@@ -1,0 +1,8 @@
+kivy>=2.2.1,<3.0
+msgpack>=1.0.0,<2.0
+python-dateutil>=2.8.2,<3.0
+pyinstaller>=6.0,<7.0
+
+# Windows (Kivy binary deps)
+kivy_deps.sdl2; sys_platform == "win32"
+kivy_deps.glew; sys_platform == "win32"

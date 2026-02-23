@@ -1,0 +1,96 @@
+# ===================================
+# Python / Kivy
+# ===================================
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Kivy cache
+**/.kivy/
+**/.kivy_cache/
+**/*.kv.orig
+
+# Virtual environments（全部無視）
+**/.venv/
+**/env/
+**/.env/
+**/env.bak/
+**/.env.bak/
+
+# ===================================
+# Go (parser/)
+# ===================================
+# Go build artifacts
+**/*.exe
+**/*.test
+**/*.out
+
+# Go module caches
+**/bin/
+**/pkg/mod/
+**/pkg/sumdb/
+
+
+# ===================================
+# Build / Packaging
+# ===================================
+**/build/
+**/dist/
+**/__pyinstaller__/
+
+
+# Binaries
+**/*.dll
+**/*.so
+**/*.dylib
+
+
+# ===================================
+# Release folder（parser.exeなどを置く）
+**/release/
+**/releases/
+**/artifacts/
+
+
+# ===================================
+# OS / Editor / IDE
+# ===================================
+# Windows
+**/Thumbs.db
+**/Desktop.ini
+
+# macOS
+**/.DS_Store
+
+# VSCode / JetBrains
+**/.vscode/
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.code-workspace
+
+
+
+# ===================================
+# Archives / Temp / Misc
+# ===================================
+**/*.zip
+**/*.tar
+**/*.gz
+**/*.7z
+**/*.bak
+**/*.old
+**/*.tmp
+**/tmp/
+**/temp/
+kdv/maps/*.png
+
+# ===================================
+# Local license & build tooling
+# ===================================
+collect_licenses.py
+third_party_licenses/
+THIRD_PARTY_NOTICES.txt
+build.local.bat
+.dist/
