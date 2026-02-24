@@ -4,8 +4,8 @@ go 1.25.6
 
 require (
 	github.com/fogleman/gg v1.3.0
-	github.com/golang/geo v0.0.0-20251117194806-05dcfdd28b33
-	github.com/markus-wa/demoinfocs-golang/v5 v5.0.4
+	github.com/golang/geo v0.0.0-20260129164528-943061e2742c
+	github.com/markus-wa/demoinfocs-golang/v5 v5.1.2
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 )
 
@@ -20,8 +20,8 @@ require (
 	github.com/markus-wa/quickhull-go/v2 v2.2.0 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/exp v0.0.0-20251113190631-e25ba8c21ef6 // indirect
+	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/image v0.18.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )
