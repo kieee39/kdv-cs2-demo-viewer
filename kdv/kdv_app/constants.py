@@ -1,7 +1,7 @@
 from kivy.utils import get_hex_from_color
 from .config_loader import default_json_config, load_config
 
-KDV_VER = "1.0.0"
+KDV_VER = "1.0.1"
 
 PLY_SIZE = 77
 TIMER_SIZE = 100
