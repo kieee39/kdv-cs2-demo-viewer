@@ -13,9 +13,14 @@ import (
 
 // Run orchestrates the two-pass parsing and file output.
 func Run(cfg config.Config) error {
-	state, err := ParseDemo(cfg)
+	meta, err := DetectRounds(cfg)
 	if err != nil {
-		return fmt.Errorf("parse demo: %w", err)
+		return fmt.Errorf("detect rounds: %w", err)
+	}
+
+	state, err := ParseRounds(cfg, meta)
+	if err != nil {
+		return fmt.Errorf("parse rounds: %w", err)
 	}
 
 	if err := output.WriteKumademFile(cfg.OutputPath, &state.out); err != nil {
@@ -25,6 +30,7 @@ func Run(cfg config.Config) error {
 }
 
 // ParseDemo runs detection and parsing in a single pass.
+// Experimental: may be removed or changed without a major version bump. Not currently used by main.go.
 func ParseDemo(cfg config.Config) (*ParseState, error) {
 	var meta RoundMeta
 
