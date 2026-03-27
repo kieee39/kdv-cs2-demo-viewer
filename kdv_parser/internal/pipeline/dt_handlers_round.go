@@ -48,7 +48,7 @@ func (st *DetectState) onRoundEnd(psr demoinfocs.Parser) {
 	st.roundEnds(psr)
 	st.setPlayerSteamID(psr)
 	st.setTeamID(psr)
-	st.meta.TempAll = psr.GameState().Participants().All()
+	st.meta.TempAll = psr.GameState().Participants().Playing()
 }
 
 func (st *DetectState) onRoundEndOfficial(psr demoinfocs.Parser) {
