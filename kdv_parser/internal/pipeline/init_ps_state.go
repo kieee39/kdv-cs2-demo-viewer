@@ -36,7 +36,7 @@ func newBaseParseState(cfg config.Config, meta *RoundMeta, psr demoinfocs.Parser
 	demMD5, _ := md5sum(cfg.SourcePath)
 	st.out.Header.OriginalHash = demMD5
 
-	st.out.MatchStats.KdmVersion = "1.0.1"
+	st.out.MatchStats.KdmVersion = "1.0.2"
 	return st
 }
 
