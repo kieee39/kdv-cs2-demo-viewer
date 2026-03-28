@@ -7,6 +7,7 @@ type DetectState struct {
 	cfg  config.Config
 	meta *RoundMeta
 
-	inRound   bool
-	tempFrame int
+	inRound        bool
+	tempFrame      int
+	ignoredSteamID map[uint64]struct{}
 }
