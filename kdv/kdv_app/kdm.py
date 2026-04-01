@@ -1,6 +1,7 @@
-import zipfile
+import json
 import os
 import tempfile
+import zipfile
 import msgpack
 from dateutil.relativedelta import relativedelta
 
@@ -77,6 +78,7 @@ OVERLAY_SCALE_MAP = {
 IS_RAW = False
 
 class KdmObj:
+    NAME_OVERRIDES_ENTRY = "kdm_name_overrides.json"
 
     def __init__(self, path):
         
@@ -94,6 +96,8 @@ class KdmObj:
         kdm_byte = self.zf.read('kdm_matchstats')
         self.MatchStats = msgpack.unpackb(kdm_byte, use_list=False, raw=IS_RAW, unicode_errors='replace')
         self.RoundInfoList = self.MatchStats['RoundInfoList']
+        self.name_overrides = {"teams": {}, "players": {}}
+        self.load_name_overrides()
         self.rs = None
         
         # count the number of rounds for one-round mode
@@ -124,6 +128,47 @@ class KdmObj:
                 if index_text.isdigit():
                     self.round_traj_entries[int(index_text)] = filename
                 return
+
+    def load_name_overrides(self):
+        self.name_overrides = {"teams": {}, "players": {}}
+        try:
+            data = json.loads(self.zf.read(self.NAME_OVERRIDES_ENTRY).decode("utf-8"))
+        except (KeyError, OSError, UnicodeDecodeError, json.JSONDecodeError):
+            return
+        if not isinstance(data, dict):
+            return
+        teams = data.get("teams", {})
+        players = data.get("players", {})
+        self.name_overrides["teams"] = teams if isinstance(teams, dict) else {}
+        self.name_overrides["players"] = players if isinstance(players, dict) else {}
+
+    def save_name_overrides(self):
+        tmp_path = None
+        try:
+            fd, tmp_path = tempfile.mkstemp(prefix="kdv_", suffix=".kdz", dir=self.file_dir or ".")
+            os.close(fd)
+            with zipfile.ZipFile(tmp_path, "w") as zout:
+                for item in self.zf.infolist():
+                    if item.filename == self.NAME_OVERRIDES_ENTRY:
+                        continue
+                    zout.writestr(item, self.zf.read(item.filename))
+                zout.writestr(
+                    self.NAME_OVERRIDES_ENTRY,
+                    json.dumps(self.name_overrides, ensure_ascii=False, indent=2).encode("utf-8"),
+                )
+            self.zf.close()
+            os.replace(tmp_path, self.path)
+            self.zf = zipfile.ZipFile(self.path)
+            return True
+        except (OSError, zipfile.BadZipFile):
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+            if getattr(self.zf, "fp", None) is None:
+                self.zf = zipfile.ZipFile(self.path)
+            return False
 
     def get_round_trajectory_path(self, index):
         return self._get_round_trajectory_path(index, prefer_thumb=True)
@@ -179,6 +224,8 @@ class KdmObj:
             if item.filename == 'kdm_header':
                 zout.writestr(item, buffer)
             elif item.filename == 'kdm_matchstats':
+                zout.writestr(item, buffer)
+            elif item.filename == self.NAME_OVERRIDES_ENTRY:
                 zout.writestr(item, buffer)
             elif item.filename[:10] == 'kdm_round_' and int(item.filename[10:]) == index:
                 zout.writestr(item, buffer)
