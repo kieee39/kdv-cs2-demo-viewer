@@ -94,3 +94,4 @@ third_party_licenses/
 THIRD_PARTY_NOTICES.txt
 build.local.bat
 .dist/
+.codex
