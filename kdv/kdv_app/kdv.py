@@ -122,6 +122,50 @@ class Kdv(Widget):
         self.map_ui_service = MapUiService(self)
         self.round_list_presenter = RoundListPresenter(self)
 
+    def apply_name_overrides_to_matchstats(self):
+        if self.ko is None:
+            return
+        team_overrides = self.ko.name_overrides.get("teams", {})
+        if not isinstance(team_overrides, dict):
+            return
+
+        team_names = self.get_team_names()
+        if team_names is None:
+            return
+
+        for key, value in team_overrides.items():
+            try:
+                index = int(key)
+            except (TypeError, ValueError):
+                continue
+            if index not in (0, 1):
+                continue
+            team_names[index] = self.normalize_team_name(index, value)
+
+    def apply_name_overrides_to_round(self):
+        if self.ko is None or self.ko.rs is None:
+            return
+        player_overrides = self.ko.name_overrides.get("players", {})
+        if not isinstance(player_overrides, dict):
+            return
+
+        player_names = self.get_round_player_names()
+        if player_names is None:
+            return
+
+        for key, value in player_overrides.items():
+            try:
+                index = int(key)
+            except (TypeError, ValueError):
+                continue
+            if index < 0:
+                continue
+            while len(player_names) <= index:
+                player_names.append("")
+            normalized_name = str(value).strip() if value is not None else ""
+            if normalized_name:
+                player_names[index] = normalized_name
+
     def _keyboard_start(self):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
@@ -241,6 +285,117 @@ class Kdv(Widget):
         ssrate = self.ko.Header["SnapshotRate"]
         time_list, tk_list, ctk_list, plant, plant_site, n_list = build_seekbar_hints(self.ko.rs, self.ss_index_max, ssrate)
         self.seekbar.draw_hints_w(time_list, tk_list, ctk_list, plant, plant_site, n_list)
+
+    def normalize_team_name(self, team_index, team_name):
+        normalized_name = str(team_name).strip() if team_name is not None else ""
+        if normalized_name == "":
+            normalized_name = "Team{}".format(team_index)
+        return normalized_name
+
+    def get_team_names(self):
+        if self.ko is None:
+            return None
+        team_names = self.ko.MatchStats.get("TeamName")
+        if team_names is None:
+            team_names = ["", ""]
+        elif not isinstance(team_names, list):
+            team_names = list(team_names)
+        self.ko.MatchStats["TeamName"] = team_names
+        while len(team_names) < 2:
+            team_names.append("")
+        return team_names
+
+    def get_round_player_names(self):
+        if self.ko is None or self.ko.rs is None:
+            return None
+        player_names = self.ko.rs.get("PlayerNames", [])
+        if not isinstance(player_names, list):
+            player_names = list(player_names)
+            self.ko.rs["PlayerNames"] = player_names
+        self.ko.rs_pname = player_names
+        return player_names
+
+    def sync_round_player_references(self, old_name, new_name):
+        if self.ko is None or self.ko.rs is None or old_name == new_name:
+            return
+
+        nades = self.ko.rs.get("NadesDrawingInfoMap") or []
+        for nade in nades:
+            if nade.get("ThrowerName") == old_name:
+                nade["ThrowerName"] = new_name
+
+        quoted_old_name = '"{}"'.format(old_name)
+        quoted_new_name = '"{}"'.format(new_name)
+        event_logs = self.ko.rs.get("EventLogs") or []
+        for event_log in event_logs:
+            log_text = event_log.get("Log")
+            if isinstance(log_text, str) and quoted_old_name in log_text:
+                event_log["Log"] = log_text.replace(quoted_old_name, quoted_new_name)
+
+    def sync_team_names(self):
+        team_names = self.get_team_names()
+        if team_names is None:
+            return
+
+        team0_name = self.normalize_team_name(0, team_names[0])
+        team1_name = self.normalize_team_name(1, team_names[1])
+        team_names[0] = team0_name
+        team_names[1] = team1_name
+
+        self.team0_name = team0_name
+        self.team1_name = team1_name
+
+        if "result0" in self.ids and "result1" in self.ids:
+            self.ids["result0"].team_name = team0_name
+            self.ids["result1"].team_name = team1_name
+
+        if self.teams_panel:
+            self.teams_panel.set_team_name(0, team0_name)
+            self.teams_panel.set_team_name(1, team1_name)
+
+    def rename_team(self, team_index, new_name):
+        if self.ko is None or team_index not in (0, 1):
+            return
+
+        team_names = self.get_team_names()
+        if team_names is None:
+            return
+        team_names[team_index] = new_name
+        self.ko.name_overrides.setdefault("teams", {})[str(team_index)] = self.normalize_team_name(team_index, new_name)
+        self.ko.save_name_overrides()
+
+        self.sync_team_names()
+        self.refresh()
+
+    def rename_player(self, player_index, new_name):
+        if self.ko is None or self.ko.rs is None or player_index < 0:
+            return
+
+        normalized_name = str(new_name).strip()
+        if normalized_name == "":
+            return
+
+        player_names = self.get_round_player_names()
+        if player_names is None:
+            return
+        while len(player_names) <= player_index:
+            player_names.append("")
+        old_name = str(player_names[player_index]) if player_index < len(player_names) else ""
+        player_names[player_index] = normalized_name
+
+        self.ko.name_overrides.setdefault("players", {})[str(player_index)] = normalized_name
+        self.ko.save_name_overrides()
+        self.sync_round_player_references(old_name, normalized_name)
+
+        if self.teams_panel and player_index < len(self.teams_panel.player_list):
+            self.teams_panel.player_list[player_index].name = normalized_name
+        if self.kdvmap and player_index < len(self.kdvmap.player_list):
+            self.kdvmap.player_list[player_index].namelabel.text = normalized_name
+        if self.nade_list_panel and hasattr(self.nade_list_panel, "refresh_from_data"):
+            self.nade_list_panel.refresh_from_data()
+        if self.event_logger:
+            self.event_logger.load_logs(self.ko.rs.get("EventLogs"))
+            self.event_logger.update(self.current_ss_index)
 
 
 class KdvApp(App):

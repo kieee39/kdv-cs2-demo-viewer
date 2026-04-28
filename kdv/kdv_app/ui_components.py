@@ -10,12 +10,12 @@ from kivy.properties import (
     ObjectProperty,
     StringProperty,
 )
-from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.behaviors.togglebutton import ToggleButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.slider import Slider
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.togglebutton import ToggleButton
@@ -41,6 +41,7 @@ class SimpleRoundButton(ToggleButton):
 
 
 class ResultPanel(BoxLayout):
+    team_index = NumericProperty(0)
     team_name = StringProperty("-")
     score = NumericProperty(0)
 
@@ -58,6 +59,70 @@ class RoundTeamStat(BoxLayout):
 
     def __init__(self, **kwargs):
         super(RoundTeamStat, self).__init__(**kwargs)
+
+
+class InlineEditableName(FloatLayout):
+    item_index = NumericProperty(-1)
+    kind = StringProperty("team")
+    display_text = StringProperty("")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._last_saved_value = ""
+        self.bind(display_text=self._sync_editor_text)
+
+    def _sync_editor_text(self, *_args):
+        editor = self.ids.get("editor")
+        display = self.ids.get("display")
+        if display is not None:
+            display.text = self.display_text
+        if editor is not None and not editor.focus:
+            self._last_saved_value = self.display_text
+            if editor.text != self.display_text:
+                editor.text = self.display_text
+
+    def on_editor_focus(self, editor, value):
+        if value:
+            editor.select_all()
+            return
+        self.commit_value()
+
+    def on_editor_text_validate(self, editor):
+        self.commit_value()
+        editor.focus = False
+
+    def on_editor_text(self, editor, value):
+        self.display_text = value
+
+    def commit_value(self):
+        app = App.get_running_app()
+        if not app or not app.root:
+            return
+
+        value = str(self.ids["editor"].text).strip() if "editor" in self.ids else ""
+        if self.kind == "team":
+            if self.item_index not in (0, 1):
+                return
+            if value == "":
+                value = "Team{}".format(self.item_index)
+            if value == self._last_saved_value:
+                self.display_text = value
+                return
+            app.root.rename_team(int(self.item_index), value)
+        else:
+            if self.item_index < 0:
+                return
+            if value == "":
+                self.ids["editor"].text = self._last_saved_value
+                self.display_text = self._last_saved_value
+                return
+            if value == self._last_saved_value:
+                self.display_text = value
+                return
+            app.root.rename_player(int(self.item_index), value)
+
+        self._last_saved_value = value
+        self.display_text = value
 
 
 class RoundPanel(ToggleButtonBehavior, BoxLayout):
@@ -190,6 +255,7 @@ class NadeLabel(Label):
 
 
 class PlayerPanel(BoxLayout):
+    player_index = NumericProperty(-1)
     slot = NumericProperty(0)
     name = StringProperty("-")
     color = ListProperty([0, 0, 0, 0])
@@ -283,6 +349,7 @@ class PlayerPanel(BoxLayout):
 
 
 class TeamPanel(BoxLayout):
+    team_index = NumericProperty(0)
     team_name = StringProperty("")
     team_color = ListProperty([0.1, 0.1, 0.1, 0.3])
     is_winner = BooleanProperty(False)
@@ -341,12 +408,31 @@ class TeamsPanel(StackLayout):
         self.team.append(self.ids["team0"])
         self.team.append(self.ids["team1"])
 
-        self.team[0].team_name = self.ms["TeamName"][0]
-        self.team[1].team_name = self.ms["TeamName"][1]
+        team_names = self.ms.get("TeamName", ["", ""])
+        team0_name = team_names[0] if len(team_names) > 0 else ""
+        team1_name = team_names[1] if len(team_names) > 1 else ""
+        self.set_team_name(0, team0_name)
+        self.set_team_name(1, team1_name)
 
-        if self.team[0].team_name == "" or self.team[1].team_name == "":
-            self.team[0].team_name = "Team0"
-            self.team[1].team_name = "Team1"
+    def set_team_name(self, team_index, team_name):
+        if team_index not in (0, 1):
+            return
+
+        normalized_name = str(team_name).strip() if team_name is not None else ""
+        if normalized_name == "":
+            normalized_name = "Team{}".format(team_index)
+
+        if 0 <= team_index < len(self.team):
+            self.team[team_index].team_name = normalized_name
+
+        if self.ms and "TeamName" in self.ms:
+            team_names = self.ms["TeamName"]
+            if not isinstance(team_names, list):
+                team_names = list(team_names)
+                self.ms["TeamName"] = team_names
+            while len(team_names) < 2:
+                team_names.append("")
+            team_names[team_index] = normalized_name
 
     def load_round(self, rss, index):
         self.rss = rss
@@ -400,6 +486,7 @@ class TeamsPanel(StackLayout):
         for i, p in enumerate(self.player_list):
             if i >= total_players:
                 break
+            p.player_index = i
             p.slot = (i + 1) % 10
             p.name = self.rss["PlayerNames"][i]
 
