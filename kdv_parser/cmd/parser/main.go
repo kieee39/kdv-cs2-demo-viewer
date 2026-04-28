@@ -7,11 +7,13 @@ import (
 
 	"kdv_parser/internal/config"
 	"kdv_parser/internal/pipeline"
+	appversion "kdv_parser/internal/version"
 )
 
 const demoInfocsModule = "github.com/markus-wa/demoinfocs-golang/v5"
 
 func main() {
+	printKDVVersion()
 	printDemoInfocsVersion()
 
 	cfg, err := config.FromFlags()
@@ -21,6 +23,10 @@ func main() {
 	if err := pipeline.Run(cfg); err != nil {
 		log.Fatalf("failed to run pipeline: %v", err)
 	}
+}
+
+func printKDVVersion() {
+	fmt.Printf("[startup] kdv: %s\n", appversion.KDV)
 }
 
 func printDemoInfocsVersion() {

@@ -1,0 +1,3 @@
+package version
+
+const KDV = "1.0.2"

@@ -11,6 +11,7 @@ import (
 	demoinfocs "github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
 
 	"kdv_parser/internal/config"
+	appversion "kdv_parser/internal/version"
 	"kdv_parser/pkg/kumadem"
 )
 
@@ -36,7 +37,7 @@ func newBaseParseState(cfg config.Config, meta *RoundMeta, psr demoinfocs.Parser
 	demMD5, _ := md5sum(cfg.SourcePath)
 	st.out.Header.OriginalHash = demMD5
 
-	st.out.MatchStats.KdmVersion = "1.0.2"
+	st.out.MatchStats.KdmVersion = appversion.KDV
 	return st
 }
 
