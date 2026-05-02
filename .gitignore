@@ -84,7 +84,6 @@
 **/*.tmp
 **/tmp/
 **/temp/
-kdv/maps/*.png
 
 # ===================================
 # Local license & build tooling
