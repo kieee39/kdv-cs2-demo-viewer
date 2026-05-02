@@ -3,6 +3,11 @@ import os
 import subprocess
 import sys
 
+# GitHub Actions' Windows runners commonly expose only Microsoft's GDI
+# OpenGL 1.1 implementation. ANGLE avoids failing Kivy's OpenGL 2.0 check.
+if sys.platform == "win32":
+    os.environ.setdefault("KIVY_GL_BACKEND", "angle_sdl2")
+
 from kivy.config import Config
 
 # Config must be set before importing other Kivy modules to take effect at startup.

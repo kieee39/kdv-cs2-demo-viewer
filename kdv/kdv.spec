@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-from kivy_deps import sdl2, glew
+from kivy_deps import angle, glew, sdl2
 
 block_cipher = None
 
@@ -27,7 +27,7 @@ exe = EXE(
     a.binaries,
     a.zipfiles,
     a.datas,
-    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
+    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins + angle.dep_bins)],
     name='kdv',
     debug=False,
     bootloader_ignore_signals=False,

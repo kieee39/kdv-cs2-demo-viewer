@@ -33,6 +33,7 @@ echo [KDV] Building KDV with PyInstaller...
 pushd "%KDV_DIR%"
 call "%PY_VENV%\Scripts\activate.bat"
 if errorlevel 1 exit /b !errorlevel!
+set "KIVY_GL_BACKEND=angle_sdl2"
 call pyinstaller --clean --distpath "." --workpath ".\\__pyinstaller__" ".\kdv.spec"
 if errorlevel 1 exit /b !errorlevel!
 popd
