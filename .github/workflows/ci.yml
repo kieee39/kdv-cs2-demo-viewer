@@ -50,6 +50,7 @@ jobs:
         working-directory: kdv
         shell: pwsh
         run: |
+          $env:KIVY_GL_BACKEND = "angle_sdl2"
           python -m compileall -q kdv_app main.py
           pyinstaller --clean --distpath . --workpath .\__pyinstaller__ .\kdv.spec
 

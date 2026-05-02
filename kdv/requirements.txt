@@ -6,3 +6,4 @@ pyinstaller>=6.0,<7.0
 # Windows (Kivy binary deps)
 kivy_deps.sdl2; sys_platform == "win32"
 kivy_deps.glew; sys_platform == "win32"
+kivy_deps.angle; sys_platform == "win32"
