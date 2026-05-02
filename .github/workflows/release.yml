@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Windows release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: kdv/.python-version
+          cache: pip
+          cache-dependency-path: kdv/requirements.txt
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kdv_parser/go.mod
+          cache-dependency-path: kdv_parser/go.sum
+
+      - name: Build
+        shell: cmd
+        run: build.bat
+
+      - name: Package Windows artifact
+        shell: pwsh
+        run: |
+          $packageDir = "dist/KDV"
+          New-Item -ItemType Directory -Force $packageDir | Out-Null
+
+          Copy-Item kdv/kdv.exe $packageDir/
+          Copy-Item kdv/kdv_config.json $packageDir/
+          Copy-Item kdv/img "$packageDir/img" -Recurse
+          Copy-Item kdv/maps "$packageDir/maps" -Recurse
+
+          if (Test-Path LICENSE) {
+            Copy-Item LICENSE $packageDir/
+          }
+          if (Test-Path THIRD_PARTY_NOTICES.txt) {
+            Copy-Item THIRD_PARTY_NOTICES.txt $packageDir/
+          }
+          if (Test-Path third_party_licenses) {
+            Copy-Item third_party_licenses "$packageDir/third_party_licenses" -Recurse
+          }
+
+          Compress-Archive -Path "$packageDir/*" -DestinationPath dist/KDV-windows.zip -Force
+
+      - name: Smoke check release package
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist/KDV-windows.zip)) {
+            throw "Missing release archive"
+          }
+          if ((Get-Item dist/KDV-windows.zip).Length -le 0) {
+            throw "Release archive is empty"
+          }
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: KDV-windows-release
+          path: dist/KDV-windows.zip
+          if-no-files-found: error
+
+      - name: Attach artifact to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          $archive = "dist/KDV-windows.zip"
+          gh release view $env:TAG_NAME *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:TAG_NAME $archive --title $env:TAG_NAME --notes "Automated release for $env:TAG_NAME"
+          } else {
+            gh release upload $env:TAG_NAME $archive --clobber
+          }
