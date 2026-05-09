@@ -27,7 +27,7 @@ func main() {
 
 func printKDVVersion() {
 	fmt.Printf("[startup] kdv: %s\n", appversion.KDV)
-	fmt.Printf("[startup] kdzformat: %s\n", appversion.KDZFormat)
+	fmt.Printf("[startup] kdzformat: %d\n", appversion.KDZFormat)
 }
 
 func printDemoInfocsVersion() {
