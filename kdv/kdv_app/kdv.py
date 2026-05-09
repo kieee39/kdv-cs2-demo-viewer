@@ -33,7 +33,7 @@ from kivy.uix.widget import Widget
 from . import constants
 from .app_controller import KdvController
 from .config_loader import load_config
-from .constants import KDV_VER
+from .constants import KDV_VER, KDZ_FORMAT_VERSION
 from .loader import KdvLoader
 from .map_ui_service import MapUiService
 from .map_view import GrenadeLayer, KdvMap, MapBoard, Paint, Player
@@ -139,7 +139,7 @@ class Kdv(Widget):
         return self.controller.handle_key(keycode)
 
     def load_kdm_ver(self, file_path):
-        self.loader.load_kdm_ver(file_path)
+        return self.loader.load_kdm_ver(file_path)
 
     def load_kdm(self, file_path):
         self.loader.load_kdm(file_path)
@@ -278,8 +278,8 @@ class KdvApp(App):
         kdz = kdz + ".kdz"
         if ext == ".dem":
             if os.path.isfile(kdz):
-                self.root.load_kdm_ver(kdz)
-                if self.root.ko.MatchStats["KdmVersion"] != KDV_VER:
+                matchstats = self.root.load_kdm_ver(kdz)
+                if matchstats.get("KdzFormatVersion") != KDZ_FORMAT_VERSION:
                     self.title = "KumaDemoViewer_" + KDV_VER + " is Parsing " + file_path_uni
                     res = self.make_kdz(file_path_uni)
                     print("res.returncode =", res.returncode)
@@ -309,6 +309,11 @@ class KdvApp(App):
                     return
             return
         elif ext == ".kdz":
+            matchstats = self.root.load_kdm_ver(file_path_uni)
+            if matchstats.get("KdzFormatVersion") != KDZ_FORMAT_VERSION:
+                print("KDZ format version mismatch. Please reparse from the original .dem file.")
+                self.title = "KumaDemoViewer_" + KDV_VER
+                return
             self.root.load_kdm(file_path_uni)
             return
 

@@ -76,6 +76,13 @@ OVERLAY_SCALE_MAP = {
 
 IS_RAW = False
 
+
+def read_matchstats(path):
+    with zipfile.ZipFile(path) as zf:
+        kdm_byte = zf.read('kdm_matchstats')
+    return msgpack.unpackb(kdm_byte, use_list=False, raw=IS_RAW, unicode_errors='replace')
+
+
 class KdmObj:
 
     def __init__(self, path):

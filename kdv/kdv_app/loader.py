@@ -10,8 +10,9 @@ class KdvLoader:
         self.root = root
 
     def load_kdm_ver(self, file_path):
-        self.root.ko = kdm.KdmObj(file_path)
-        self.root.ver = "KDZ_VER_" + self.root.ko.MatchStats["KdmVersion"]
+        matchstats = kdm.read_matchstats(file_path)
+        self.root.ver = "KDZ_VER_" + matchstats["KdmVersion"]
+        return matchstats
 
     def load_kdm(self, file_path):
         root = self.root
