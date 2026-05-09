@@ -7,9 +7,10 @@ import (
 )
 
 type MatchStats struct {
-	KdmVersion string
-	Title      string
-	HltvLink   string
+	KdmVersion       string
+	KdzFormatVersion int
+	Title            string
+	HltvLink         string
 
 	TeamName      [2]string
 	RoundInfoList []RoundInfo

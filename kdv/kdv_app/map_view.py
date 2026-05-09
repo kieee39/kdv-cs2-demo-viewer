@@ -534,8 +534,10 @@ class KdvMap(Scatter):
 
         if self.back_img:
             self.canvas.before.remove(self.back_img)
+            self.back_img = None
         if self.back_img_lower:
             self.canvas.before.remove(self.back_img_lower)
+            self.back_img_lower = None
         if self.traj_color:
             self.canvas.before.remove(self.traj_color)
             self.traj_color = None
