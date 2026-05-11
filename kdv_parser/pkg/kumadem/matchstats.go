@@ -7,7 +7,6 @@ import (
 )
 
 type MatchStats struct {
-	KdmVersion       string
 	KdzFormatVersion int
 	Title            string
 	HltvLink         string
