@@ -41,7 +41,7 @@ class MapUiService:
                 root.mb_init_size = size
         else:
             min_scale = min(size[0] / root.mb_init_size[0], size[1] / root.mb_init_size[1])
-            root.kdvmap.scale = KDV_SCALE_MAP[root.map_name] * min_scale
+            root.kdvmap.scale = KDV_SCALE_MAP.get(root.map_name, 1.0) * min_scale
         root.refresh()
 
     def change_paint_color(self):
