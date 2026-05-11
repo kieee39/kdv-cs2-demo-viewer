@@ -34,6 +34,7 @@ from . import constants
 from .app_controller import KdvController
 from .config_loader import load_config
 from .constants import KDV_VER, KDZ_FORMAT_VERSION
+from .kdm import KdmObj
 from .loader import KdvLoader
 from .map_ui_service import MapUiService
 from .map_view import GrenadeLayer, KdvMap, MapBoard, Paint, Player
@@ -435,10 +436,16 @@ class KdvApp(App):
             if os.path.isfile(kdz):
                 matchstats = self.root.load_kdm_ver(kdz)
                 if matchstats.get("KdzFormatVersion") != KDZ_FORMAT_VERSION:
+                    name_overrides_entry = KdmObj.read_name_overrides_entry(kdz)
+                    if name_overrides_entry is not None:
+                        print("kdm_name_overrides.json was detected and preserved")
                     self.title = "KumaDemoViewer_" + KDV_VER + " is Parsing " + file_path_uni
                     res = self.make_kdz(file_path_uni)
                     print("res.returncode =", res.returncode)
                     if res.returncode == 0:
+                        if name_overrides_entry is not None:
+                            if not KdmObj.write_name_overrides_entry(kdz, name_overrides_entry):
+                                print("failed to preserve kdm_name_overrides.json")
                         filename = os.path.basename(file_path_uni)
                         self.title = "KumaDemoViewer_" + KDV_VER + "   " + filename
                         self.root.load_kdm(kdz)

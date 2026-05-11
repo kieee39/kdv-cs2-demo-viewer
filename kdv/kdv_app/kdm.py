@@ -149,6 +149,40 @@ class KdmObj:
         self.name_overrides["teams"] = teams if isinstance(teams, dict) else {}
         self.name_overrides["players"] = players if isinstance(players, dict) else {}
 
+    @classmethod
+    def read_name_overrides_entry(cls, path):
+        try:
+            with zipfile.ZipFile(path) as zf:
+                return zf.read(cls.NAME_OVERRIDES_ENTRY)
+        except (KeyError, OSError, zipfile.BadZipFile):
+            return None
+
+    @classmethod
+    def write_name_overrides_entry(cls, path, override_bytes):
+        if not override_bytes:
+            return True
+
+        file_dir = os.path.dirname(path)
+        tmp_path = None
+        try:
+            fd, tmp_path = tempfile.mkstemp(prefix="kdv_", suffix=".kdz", dir=file_dir or ".")
+            os.close(fd)
+            with zipfile.ZipFile(path) as zin, zipfile.ZipFile(tmp_path, "w") as zout:
+                for item in zin.infolist():
+                    if item.filename == cls.NAME_OVERRIDES_ENTRY:
+                        continue
+                    zout.writestr(item, zin.read(item.filename))
+                zout.writestr(cls.NAME_OVERRIDES_ENTRY, override_bytes)
+            os.replace(tmp_path, path)
+            return True
+        except (OSError, zipfile.BadZipFile):
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
+            return False
+
     def save_name_overrides(self):
         tmp_path = None
         try:
