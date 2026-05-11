@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"runtime/debug"
 
 	"kdv_parser/internal/config"
@@ -13,6 +14,11 @@ import (
 const demoInfocsModule = "github.com/markus-wa/demoinfocs-golang/v5"
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "-v" {
+		fmt.Println(appversion.KDZFormat)
+		return
+	}
+
 	printKDVVersion()
 	printDemoInfocsVersion()
 
