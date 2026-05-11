@@ -33,7 +33,7 @@ from kivy.uix.widget import Widget
 from . import constants
 from .app_controller import KdvController
 from .config_loader import load_config
-from .constants import KDV_VER, KDZ_FORMAT_VERSION
+from .constants import KDV_VER
 from .kdm import KdmObj
 from .loader import KdvLoader
 from .map_ui_service import MapUiService
@@ -405,9 +405,14 @@ class Kdv(Widget):
 
 
 class KdvApp(App):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.kdz_format_version = None
+
     def build(self):
         if hasattr(sys, "_MEIPASS"):
             resource_add_path(sys._MEIPASS)
+        self.kdz_format_version = self.load_parser_kdz_format_version()
         Builder.load_file(KV_PATH)
         Window.bind(on_dropfile=self.on_file_drop)
         self.title = "KumaDemoViewer_" + KDV_VER
@@ -424,6 +429,22 @@ class KdvApp(App):
             base_path = BASE_DIR
         return os.path.join(base_path, relative_path)
 
+    def load_parser_kdz_format_version(self):
+        try:
+            res = subprocess.run(
+                (self.resource_path("./kdv_parser.exe"), "-v"),
+                capture_output=True,
+                text=True,
+            )
+            if res.returncode == 0:
+                return int(res.stdout.strip())
+            print("failed to load kdz format version from kdv_parser.exe", file=sys.stderr)
+            print(res.stderr, file=sys.stderr)
+        except (OSError, ValueError) as e:
+            print("failed to load kdz format version from kdv_parser.exe", file=sys.stderr)
+            print(e, file=sys.stderr)
+        raise SystemExit(1)
+
     def on_file_drop(self, widget, file_path):
         file_path_uni = os.fsdecode(file_path)
 
@@ -435,7 +456,7 @@ class KdvApp(App):
         if ext == ".dem":
             if os.path.isfile(kdz):
                 matchstats = self.root.load_kdm_ver(kdz)
-                if matchstats.get("KdzFormatVersion") != KDZ_FORMAT_VERSION:
+                if self.kdz_format_version != matchstats.get("KdzFormatVersion"):
                     name_overrides_entry = KdmObj.read_name_overrides_entry(kdz)
                     if name_overrides_entry is not None:
                         print("kdm_name_overrides.json was detected and preserved")
@@ -472,7 +493,7 @@ class KdvApp(App):
             return
         elif ext == ".kdz":
             matchstats = self.root.load_kdm_ver(file_path_uni)
-            if matchstats.get("KdzFormatVersion") != KDZ_FORMAT_VERSION:
+            if self.kdz_format_version != matchstats.get("KdzFormatVersion"):
                 print("KDZ format version mismatch. Please reparse from the original .dem file.")
                 self.title = "KumaDemoViewer_" + KDV_VER
                 return
