@@ -11,7 +11,7 @@ class KdvLoader:
 
     def load_kdm_ver(self, file_path):
         matchstats = kdm.read_matchstats(file_path)
-        self.root.ver = "KDZ_VER_" + matchstats["KdmVersion"]
+        self.root.ver = "KDZ_Format = " + str(matchstats["KdzFormatVersion"])
         return matchstats
 
     def load_kdm(self, file_path):
@@ -28,7 +28,7 @@ class KdvLoader:
             print("Kdm is None.")
             return
 
-        root.ver = "KDZ_VER_" + root.ko.MatchStats["KdmVersion"]
+        root.ver = "KDZ_Format = " + str(root.ko.MatchStats["KdzFormatVersion"])
         root.second_per_frame = 1 / root.ko.Header["SnapshotRate"]
         root.demo_tick = int(root.ko.Header["TickRate"])
         root.round_index_max = len(root.ko.MatchStats["RoundInfoList"])
