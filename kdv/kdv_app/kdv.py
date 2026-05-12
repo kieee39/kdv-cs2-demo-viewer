@@ -65,7 +65,7 @@ constants.apply_config(load_config())
 
 
 class Kdv(Widget):
-    ver = StringProperty("version")
+    ver = StringProperty("")
     team0_name = StringProperty("team0")
     team1_name = StringProperty("team1")
 
