@@ -118,9 +118,8 @@ class KdvController:
             self.play()
 
     def increment_index(self, *args):
-        if self.root.current_ss_index >= self.root.ss_index_max:
+        if self.root.current_ss_index >= self.root.ss_index_max - 1:
             self.stop()
-            self.root.playing_event.cancel()
         else:
             self.root.current_ss_index += 1
 

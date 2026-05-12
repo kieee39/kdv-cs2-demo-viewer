@@ -9,6 +9,40 @@
 <LabelJ@Label>:
     font_name: './img/ipag.ttf'
 
+<InlineEditableName>:
+    Label:
+        id: display
+        text: root.display_text
+        font_name: './img/ipag.ttf'
+        color: 1, 1, 1, 1
+        outline_width: dp(1)
+        outline_color: 0, 0, 0, 1
+        halign: 'center' if root.kind == 'team' else 'left'
+        valign: 'middle'
+        text_size: self.size
+        pos: root.pos
+        size: root.size
+    TextInput:
+        id: editor
+        text: root.display_text
+        font_name: './img/ipag.ttf'
+        background_normal: ''
+        background_active: ''
+        background_color: 0, 0, 0, 0
+        foreground_color: 0, 0, 0, 0
+        cursor_color: 1, 1, 1, 1
+        multiline: False
+        write_tab: False
+        opacity: 1 if self.focus else 0
+        halign: 'center' if root.kind == 'team' else 'left'
+        valign: 'middle'
+        padding: dp(0), dp(2)
+        on_focus: root.on_editor_focus(self, self.focus)
+        on_text: root.on_editor_text(self, self.text)
+        on_text_validate: root.on_editor_text_validate(self)
+        pos: root.pos
+        size: root.size
+
 <NameLabel@LabelJ>:
     pos: (self.parent.x - self.width + dp(10), self.parent.y - self.height) if self.parent else (0, 0)
     font_size: sp(20)
@@ -36,22 +70,20 @@
             pos: self.pos
             size: self.size
     BoxLayout:
-        LabelJ:
-            text: root.team_name[:10]
-            text_size: self.size
-            halign: 'center'
-            outline_width: dp(1)
+        InlineEditableName:
+            id: name_field
+            item_index: root.team_index
+            kind: "team"
+            display_text: root.team_name
+            size_hint_x: .78
             font_size: sp(20)
-            canvas.before:
-                Color:
-                    rgba:0,0,0, 1
         Label:
             text: str(root.score)
             text_size: self.size
             halign: 'center'
             outline_width: dp(1)
             font_size: sp(20)
-            size_hint_x: .4
+            size_hint_x: .25
 
     Label:
         text: ""
@@ -260,16 +292,15 @@
             text_size: self.size
             halign: 'right'
             valign: 'middle'
-        LabelJ:
-            text: " {}".format(root.name)
+        InlineEditableName:
+            id: name_field
+            item_index: root.player_index
+            kind: "player"
+            display_text: root.name
             size_hint_y: None
-            text_size: self.width, None
-            height: self.texture_size[1]
+            height: dp(28)
             font_size: sp(15)
-            outline_width: dp(1)
-            size_hint_x: .5
-            halign: 'left'
-            valign: 'middle'
+            size_hint_x: .68
 
         Label:
             # Main Weapon
@@ -338,34 +369,28 @@
                 size: self.size
         BoxLayout:
             size_hint_y: None
-            height: dp(20)
-            LabelJ:
-                text: root.team_name[:10]
-                text_size: self.size
-                size: self.texture_size
-                halign: 'center'
-                outline_width: dp(1)
+            height: dp(28)
+            InlineEditableName:
+                id: name_field
+                item_index: root.team_index
+                kind: "team"
+                display_text: root.team_name
+                size_hint_x: .72
                 font_size: sp(18)
-                canvas.before:
-                    Color:
-                        rgba:0,0,0, 1
-                    #Line:
-                    #    points: self.right, self.y, self.right, self.top
-                    #    width: 1.5
             Label:
                 text: str(root.score)
                 text_size: self.size
                 halign: 'center'
                 outline_width: dp(1)
                 font_size: sp(20)
-                size_hint_x: .2
+                size_hint_x: .14
             Label:
                 text: "{}".format("Win" if root.is_winner else "")
                 text_size: self.size
                 halign: 'center'
                 outline_width: dp(1)
                 font_size: sp(20)
-                size_hint_x: .3
+                size_hint_x: .14
         BoxLayout:
             size_hint_y: None
             height: dp(30)
@@ -413,10 +438,12 @@
             font_size: sp(12)
     TeamPanel:
         id: team0
+        team_index: 0
         size_hint_y: .45
 
     TeamPanel:
         id: team1
+        team_index: 1
         size_hint_y: .45
 
 <NadeInfoPanel>:
@@ -605,10 +632,12 @@
                     spacing: dp(5)
                     ResultPanel:
                         id: result0
+                        team_index: 0
                         size_hint_y: None
                         height: dp(50)
                     ResultPanel:
                         id: result1
+                        team_index: 1
                         size_hint_y: None
                         height: dp(50)
                     Label:

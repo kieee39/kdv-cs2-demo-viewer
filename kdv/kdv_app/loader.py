@@ -11,7 +11,7 @@ class KdvLoader:
 
     def load_kdm_ver(self, file_path):
         matchstats = kdm.read_matchstats(file_path)
-        self.root.ver = "KDZ_VER_" + matchstats["KdmVersion"]
+        self.root.ver = "KDZ Version: " + str(matchstats.get("KdzFormatVersion", "unknown"))
         return matchstats
 
     def load_kdm(self, file_path):
@@ -28,17 +28,11 @@ class KdvLoader:
             print("Kdm is None.")
             return
 
-        root.ver = "KDZ_VER_" + root.ko.MatchStats["KdmVersion"]
+        root.ver = "KDZ Version: " + str(root.ko.MatchStats.get("KdzFormatVersion", "unknown"))
         root.second_per_frame = 1 / root.ko.Header["SnapshotRate"]
         root.demo_tick = int(root.ko.Header["TickRate"])
         root.round_index_max = len(root.ko.MatchStats["RoundInfoList"])
 
-        root.team0_name = root.ids["result0"].team_name = root.ko.MatchStats["TeamName"][0]
-        root.team1_name = root.ids["result1"].team_name = root.ko.MatchStats["TeamName"][1]
-        if root.team0_name == "":
-            root.team0_name = root.ids["result0"].team_name = "Team0"
-        if root.team1_name == "":
-            root.team1_name = root.ids["result1"].team_name = "Team1"
         root.ids["result0"].score = root.ko.MatchStats["RoundInfoList"][-1]["CorrectScore"][0]
         root.ids["result1"].score = root.ko.MatchStats["RoundInfoList"][-1]["CorrectScore"][1]
 
@@ -54,7 +48,9 @@ class KdvLoader:
             )
         root.round_list_panel.data = round_data
 
+        root.apply_name_overrides_to_matchstats()
         root.teams_panel.load_teamnames(root.ko.MatchStats)
+        root.sync_team_names()
 
         root.map_name = root.ko.Header["MapName"]
         print(root.ko.Header["MapName"])
@@ -97,6 +93,7 @@ class KdvLoader:
 
         try:
             root.ko.load_roundsnapshots(root.current_round_index)
+            root.apply_name_overrides_to_round()
         except KeyError:
             print("RoundSnapshots KeyError")
             root.kdvmap.canvas.clear()
