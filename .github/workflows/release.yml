@@ -35,6 +35,10 @@ jobs:
         shell: cmd
         run: build.bat
 
+      - name: Collect third-party licenses
+        shell: pwsh
+        run: python collect_licenses.py
+
       - name: Package Windows artifact
         shell: pwsh
         run: |
@@ -46,15 +50,9 @@ jobs:
           Copy-Item kdv/img "$packageDir/img" -Recurse
           Copy-Item kdv/maps "$packageDir/maps" -Recurse
 
-          if (Test-Path LICENSE) {
-            Copy-Item LICENSE $packageDir/
-          }
-          if (Test-Path THIRD_PARTY_NOTICES.txt) {
-            Copy-Item THIRD_PARTY_NOTICES.txt $packageDir/
-          }
-          if (Test-Path third_party_licenses) {
-            Copy-Item third_party_licenses "$packageDir/third_party_licenses" -Recurse
-          }
+          Copy-Item LICENSE $packageDir/
+          Copy-Item THIRD_PARTY_NOTICES.txt $packageDir/
+          Copy-Item third_party_licenses "$packageDir/third_party_licenses" -Recurse
 
           Compress-Archive -Path "$packageDir/*" -DestinationPath dist/KDV-windows.zip -Force
 
@@ -66,6 +64,24 @@ jobs:
           }
           if ((Get-Item dist/KDV-windows.zip).Length -le 0) {
             throw "Release archive is empty"
+          }
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path dist/KDV-windows.zip))
+          try {
+            $entries = $zip.Entries.FullName
+            foreach ($required in @("LICENSE", "THIRD_PARTY_NOTICES.txt")) {
+              if ($entries -notcontains $required) {
+                throw "Release archive is missing: $required"
+              }
+            }
+            foreach ($requiredPrefix in @("third_party_licenses/python/*", "third_party_licenses/go/*")) {
+              if (-not ($entries | Where-Object { $_ -like $requiredPrefix })) {
+                throw "Release archive is missing entries matching: $requiredPrefix"
+              }
+            }
+          } finally {
+            $zip.Dispose()
           }
 
       - name: Upload workflow artifact
